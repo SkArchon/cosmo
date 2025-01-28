@@ -42,6 +42,8 @@ func Main() {
 		os.Exit(0)
 	}
 
+	fmt.Println(os.Getenv("CONFIG_PATH"))
+
 	result, err := config.LoadConfig(*configPathFlag, *overrideEnvFlag)
 	if err != nil {
 		log.Fatal("Could not load config", zap.Error(err))

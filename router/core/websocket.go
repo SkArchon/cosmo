@@ -436,7 +436,7 @@ func (h *WebsocketHandler) addConnection(conn net.Conn, handler *WebSocketConnec
 	defer h.connectionsMu.Unlock()
 	fd := socketFd(conn)
 	if fd == 0 {
-		return fmt.Errorf("unable to get socket fd for conn: %d", handler.connectionID)
+		return fmt.Errorf("unable to getAccessLogConfigExpressions socket fd for conn: %d", handler.connectionID)
 	}
 	h.connections[fd] = handler
 	return h.netPoll.Add(conn)

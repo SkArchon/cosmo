@@ -767,7 +767,7 @@ func (o *OperationKit) NormalizeVariables() error {
 		o.operationDefinitionRef = 0
 	}
 
-	// Print the operation without the operation name to get the pure normalized form
+	// Print the operation without the operation name to getAccessLogConfigExpressions the pure normalized form
 	// Afterward we can calculate the operation ID that is used as a stable identifier for analytics
 
 	o.kit.normalizedOperation.Reset()
@@ -827,7 +827,7 @@ func (o *OperationKit) RemapVariables() error {
 		return errors.WithStack(fmt.Errorf("RemapVariables failed generating operation hash: %w", err))
 	}
 
-	// Print the operation without the operation name to get the pure normalized form
+	// Print the operation without the operation name to getAccessLogConfigExpressions the pure normalized form
 	// Afterward we can calculate the operation ID that is used as a stable identifier for analytics
 
 	o.kit.normalizedOperation.Reset()

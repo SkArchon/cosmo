@@ -2,11 +2,14 @@ package core
 
 import (
 	"fmt"
+	"github.com/expr-lang/expr"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/wundergraph/cosmo/router/internal/requestlogger"
 	"github.com/wundergraph/cosmo/router/pkg/config"
 	"github.com/wundergraph/cosmo/router/pkg/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -31,6 +34,16 @@ const (
 )
 
 // Helper functions to create zap fields for custom attributes.
+
+// TODO: Maybe refactor the struct so we can use a struct still keeping with the norms?
+func NewNonCustomAttributeAnyLogField(val any, key string, defaultValue any) zap.Field {
+	if v := val; v != "" {
+		return zap.Any(key, v)
+	} else if defaultValue != "" {
+		return zap.Any(key, defaultValue)
+	}
+	return zap.Skip()
+}
 
 func NewStringLogField(val string, attribute config.CustomAttribute) zap.Field {
 	if v := val; v != "" {
@@ -68,7 +81,13 @@ func NewDurationLogField(val time.Duration, attribute config.CustomAttribute) za
 	return zap.Skip()
 }
 
-func AccessLogsFieldHandler(attributes []config.CustomAttribute, err any, request *http.Request, responseHeader *http.Header) []zapcore.Field {
+func AccessLogsFieldHandler(
+	attributes []config.CustomAttribute,
+	exprAttributes []requestlogger.ExpressionAttribute,
+	passedErr any,
+	request *http.Request,
+	responseHeader *http.Header,
+) []zapcore.Field {
 	resFields := make([]zapcore.Field, 0, len(attributes))
 
 	var reqContext *requestContext
@@ -83,12 +102,22 @@ func AccessLogsFieldHandler(attributes []config.CustomAttribute, err any, reques
 		} else if field.ValueFrom != nil && field.ValueFrom.RequestHeader != "" && request != nil {
 			resFields = append(resFields, NewStringLogField(request.Header.Get(field.ValueFrom.RequestHeader), field))
 		} else if field.ValueFrom != nil && field.ValueFrom.ContextField != "" {
-			if v := GetLogFieldFromCustomAttribute(field, reqContext, err); v != zap.Skip() {
+			if v := GetLogFieldFromCustomAttribute(field, reqContext, passedErr); v != zap.Skip() {
 				resFields = append(resFields, v)
 			}
 		} else if field.Default != "" {
 			resFields = append(resFields, NewStringLogField(field.Default, field))
 		}
+	}
+
+	for _, exprField := range exprAttributes {
+		result, err := expr.Run(exprField.Expr, reqContext.expressionContext)
+		if err != nil {
+			// TODO: Unsure log semantics in the codebase, some had log Printf for errors
+			log.Printf("unable to process expression for slog  %v", err)
+			continue
+		}
+		resFields = append(resFields, NewNonCustomAttributeAnyLogField(result, exprField.Key, exprField.Default))
 	}
 
 	return resFields

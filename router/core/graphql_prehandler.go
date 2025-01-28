@@ -218,6 +218,7 @@ func (h *PreHandler) Handler(next http.Handler) http.Handler {
 		executionOptions, traceOptions, err := h.parseRequestOptions(r, clientInfo, requestLogger)
 		if err != nil {
 			requestContext.error = err
+			requestContext.expressionContext.Request.Error = requestContext.error.Error()
 			writeRequestErrors(r, w, http.StatusBadRequest, graphqlerrors.RequestErrorsFromError(err), requestLogger)
 			return
 		}
@@ -240,6 +241,7 @@ func (h *PreHandler) Handler(next http.Handler) http.Handler {
 					message:    "file upload disabled",
 					statusCode: http.StatusOK,
 				}
+				requestContext.expressionContext.Request.Error = requestContext.error.Error()
 				writeOperationError(r, w, requestLogger, requestContext.error)
 				return
 			}
@@ -255,6 +257,7 @@ func (h *PreHandler) Handler(next http.Handler) http.Handler {
 			body, files, err = multipartParser.Parse(r, h.getBodyReadBuffer(r.ContentLength))
 			if err != nil {
 				requestContext.error = err
+				requestContext.expressionContext.Request.Error = requestContext.error.Error()
 				writeOperationError(r, w, requestLogger, requestContext.error)
 				readMultiPartSpan.End()
 				return
@@ -283,6 +286,7 @@ func (h *PreHandler) Handler(next http.Handler) http.Handler {
 			body, err = h.operationProcessor.ReadBody(r.Body, h.getBodyReadBuffer(r.ContentLength))
 			if err != nil {
 				requestContext.error = err
+				requestContext.expressionContext.Request.Error = requestContext.error.Error()
 
 				// Don't produce errors logs here because it can only be client side errors
 				// e.g. too large body, slow client, aborted connection etc.
@@ -309,6 +313,7 @@ func (h *PreHandler) Handler(next http.Handler) http.Handler {
 			validatedReq, err := h.accessController.Access(w, r)
 			if err != nil {
 				requestContext.error = err
+				requestContext.expressionContext.Request.Error = requestContext.error.Error()
 				requestLogger.Error("Failed to authenticate request", zap.Error(err))
 
 				// Mark the root span of the router as failed, so we can easily identify failed requests
@@ -342,6 +347,7 @@ func (h *PreHandler) Handler(next http.Handler) http.Handler {
 		})
 		if err != nil {
 			requestContext.error = err
+			requestContext.expressionContext.Request.Error = requestContext.error.Error()
 			// Mark the root span of the router as failed, so we can easily identify failed requests
 			rtrace.AttachErrToSpan(routerSpan, err)
 
@@ -369,6 +375,7 @@ func (h *PreHandler) Handler(next http.Handler) http.Handler {
 
 		// The request context needs to be updated with the latest request to ensure that the context is up to date
 		requestContext.request = r
+		requestContext.expressionContext.Request.Body = r.Body
 
 		// Call the final handler that resolves the operation
 		// and enrich the context to make it available in the request context as well for metrics etc.

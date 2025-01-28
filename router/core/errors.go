@@ -118,6 +118,7 @@ func trackFinalResponseError(ctx context.Context, err error) {
 	}
 
 	requestContext.error = err
+	requestContext.expressionContext.Request.Error = requestContext.error.Error()
 	requestContext.graphQLErrorServices = getAggregatedSubgraphServiceNames(requestContext.error)
 	requestContext.graphQLErrorCodes = getAggregatedSubgraphErrorCodes(requestContext.error)
 

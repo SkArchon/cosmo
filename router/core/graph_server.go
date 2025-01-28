@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/wundergraph/cosmo/router/pkg/execution_config"
+	exprlocal "github.com/wundergraph/cosmo/router/internal/expr"
 	otelmetric "go.opentelemetry.io/otel/metric"
 	"net/http"
 	"net/url"
@@ -365,7 +366,7 @@ func (s *graphMux) buildOperationCaches(srv *graphServer) (computeSha256 bool, e
 	//
 	// when an execution plan was generated, which can be quite expensive, we want to cache it
 	// this means that we can hash the input and cache the generated plan
-	// the next time we get the same input, we can just return the cached plan
+	// the next time we getAccessLogConfigExpressions the same input, we can just return the cached plan
 	// the engine is smart enough to first do normalization and then hash the input
 	// this means that we can cache the normalized input and don't have to worry about
 	// different inputs that would generate the same execution plan
@@ -691,6 +692,8 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 				r:                   r,
 			})
 
+			reqContext.expressionContext.Request.Body = r.Body
+
 			r = r.WithContext(withRequestContext(r.Context(), reqContext))
 
 			// For debugging purposes, we can validate from what version of the config the request is coming from
@@ -810,11 +813,17 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 
 	var subgraphAccessLogger *requestlogger.SubgraphAccessLogger
 	if s.accessLogsConfig != nil && s.accessLogsConfig.Logger != nil {
+		exprAttributes, err := getAccessLogConfigExpressions(s.accessLogsConfig.Attributes)
+		if err != nil {
+			return nil, fmt.Errorf("failed building router access log expressions: %w", err)
+		}
+
 		requestLoggerOpts := []requestlogger.Option{
 			requestlogger.WithDefaultOptions(),
 			requestlogger.WithNoTimeField(),
 			requestlogger.WithFields(baseLogFields...),
 			requestlogger.WithAttributes(s.accessLogsConfig.Attributes),
+			requestlogger.WithExprAttributes(exprAttributes),
 			requestlogger.WithFieldsHandler(AccessLogsFieldHandler),
 		}
 
@@ -834,6 +843,11 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 		httpRouter.Use(requestLogger)
 
 		if s.accessLogsConfig.SubgraphEnabled {
+			exprAttributes, err := getAccessLogConfigExpressions(s.accessLogsConfig.SubgraphAttributes)
+			if err != nil {
+				return nil, fmt.Errorf("failed building subgraph access log expressions: %w", err)
+			}
+
 			subgraphAccessLogger = requestlogger.NewSubgraphAccessLogger(
 				s.accessLogsConfig.Logger,
 				requestlogger.SubgraphOptions{
@@ -841,6 +855,7 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 					FieldsHandler:         AccessLogsFieldHandler,
 					Fields:                baseLogFields,
 					Attributes:            s.accessLogsConfig.SubgraphAttributes,
+					ExprAttributes:        exprAttributes,
 				})
 		}
 	}
@@ -1125,6 +1140,27 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 	s.graphMuxList = append(s.graphMuxList, gm)
 
 	return gm, nil
+}
+
+func getAccessLogConfigExpressions(attributes []config.CustomAttribute) ([]requestlogger.ExpressionAttribute, error) {
+	exprSlice := make([]requestlogger.ExpressionAttribute, 0)
+	// TODO: Do we need to remove valueFrom from the main list? since the conditions
+	// act like first if condition that matches runs (so multiple invalid attribute combinations
+	// can be used)
+	for _, sAttribute := range attributes {
+		if expr := sAttribute.ValueFrom.Expression; expr != "" {
+			expression, err := exprlocal.CompileAnyExpression(expr)
+			if err != nil {
+				return nil, fmt.Errorf("failed when compiling log expressions: %w", err)
+			}
+			exprSlice = append(exprSlice, requestlogger.ExpressionAttribute{
+				Key:     sAttribute.Key,
+				Default: sAttribute.Default, // TODO: Do we really need this?
+				Expr:    expression,
+			})
+		}
+	}
+	return exprSlice, nil
 }
 
 func (s *graphServer) buildPubSubConfiguration(ctx context.Context, engineConfig *nodev1.EngineConfiguration, routerEngineCfg *RouterEngineConfiguration) error {
