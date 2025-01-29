@@ -366,7 +366,7 @@ func (s *graphMux) buildOperationCaches(srv *graphServer) (computeSha256 bool, e
 	//
 	// when an execution plan was generated, which can be quite expensive, we want to cache it
 	// this means that we can hash the input and cache the generated plan
-	// the next time we getAccessLogConfigExpressions the same input, we can just return the cached plan
+	// the next time we get the same input, we can just return the cached plan
 	// the engine is smart enough to first do normalization and then hash the input
 	// this means that we can cache the normalized input and don't have to worry about
 	// different inputs that would generate the same execution plan
@@ -691,7 +691,6 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 				w:                   w,
 				r:                   r,
 			})
-
 
 			r = r.WithContext(withRequestContext(r.Context(), reqContext))
 
@@ -1143,9 +1142,6 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 
 func getAccessLogConfigExpressions(attributes []config.CustomAttribute) ([]requestlogger.ExpressionAttribute, error) {
 	exprSlice := make([]requestlogger.ExpressionAttribute, 0)
-	// TODO: Do we need to remove valueFrom from the main list? since the conditions
-	// act like first if condition that matches runs (so multiple invalid attribute combinations
-	// can be used)
 	for _, sAttribute := range attributes {
 		if expr := sAttribute.ValueFrom.Expression; expr != "" {
 			expression, err := exprlocal.CompileAnyExpression(expr)

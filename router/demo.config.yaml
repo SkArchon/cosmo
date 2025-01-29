@@ -16,17 +16,3 @@ events:
       - id: my-kafka
         brokers:
           - "localhost:9092"
-
-access_logs:
-  enabled: true
-  router:
-    fields:
-    - key: "testthere"
-      value_from:
-#        expression: "request.header.Get('X-WG-TRACE')"
-        expression: "request.error ?? request.header.Get('X-WG-TRACE')"
-
-security:
-  block_mutations:
-    enabled: true
-    condition: "request.header.Get('X-WG-TRACE') == 'yes'"

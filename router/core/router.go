@@ -577,7 +577,7 @@ func NewRouter(opts ...Option) (*Router, error) {
 	if r.hostName == "" {
 		r.hostName, err = os.Hostname()
 		if err != nil {
-			r.logger.Warn("Failed to getAccessLogConfigExpressions hostname", zap.Error(err))
+			r.logger.Warn("Failed to get hostname", zap.Error(err))
 		}
 	}
 
@@ -730,7 +730,7 @@ func (r *Router) NewServer(ctx context.Context) (Server, error) {
 
 	cfg, err := r.configPoller.GetRouterConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to getAccessLogConfigExpressions initial execution config: %w", err)
+		return nil, fmt.Errorf("failed to get initial execution config: %w", err)
 	}
 
 	if err := r.newServer(ctx, cfg.Config); err != nil {
@@ -1148,7 +1148,7 @@ func (r *Router) Start(ctx context.Context) error {
 
 	cfg, err := r.configPoller.GetRouterConfig(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to getAccessLogConfigExpressions initial execution config: %w", err)
+		return fmt.Errorf("failed to get initial execution config: %w", err)
 	}
 
 	if err := r.listenAndServe(); err != nil {

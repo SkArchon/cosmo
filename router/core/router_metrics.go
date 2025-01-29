@@ -104,7 +104,7 @@ func (m *routerMetrics) ExportSchemaUsageInfo(operationContext *operationContext
 			Type: opType,
 			Hash: strconv.FormatUint(operationContext.hash, 10),
 			// parsed operation names are re-used across requests
-			// for that reason, we need to copy the name, or it might getAccessLogConfigExpressions corrupted
+			// for that reason, we need to copy the name, or it might get corrupted
 			Name: m.strCopy(operationContext.name),
 		},
 		SchemaInfo: &graphqlmetricsv1.SchemaInfo{

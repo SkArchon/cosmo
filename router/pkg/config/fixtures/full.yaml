@@ -47,14 +47,14 @@ cors:
   max_age: 5m
 
 access_logs:
-  enabled: false
+  enabled: true
   router:
     fields:
       - key: "hello"
         value_from:
           context_field: "operation_name"
   subgraphs:
-    enabled: false
+    enabled: true
     fields:
       - key: "response_field"
         value_from:

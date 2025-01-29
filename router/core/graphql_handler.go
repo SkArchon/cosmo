@@ -193,7 +193,7 @@ func (h *GraphQLHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer propagateSubgraphErrors(ctx)
 		ctx, writer, ok = GetSubscriptionResponseWriter(ctx, r, w)
 		if !ok {
-			requestContext.logger.Error("unable to getAccessLogConfigExpressions subscription response writer", zap.Error(errCouldNotFlushResponse))
+			requestContext.logger.Error("unable to get subscription response writer", zap.Error(errCouldNotFlushResponse))
 			trackFinalResponseError(r.Context(), errCouldNotFlushResponse)
 			writeRequestErrors(r, w, http.StatusInternalServerError, graphqlerrors.RequestErrorsFromError(errCouldNotFlushResponse), requestContext.logger)
 			return
@@ -267,7 +267,7 @@ func (h *GraphQLHandler) WriteError(ctx *resolve.Context, err error, res *resolv
 	reqContext := getRequestContext(ctx.Context())
 
 	if reqContext == nil {
-		h.log.Error("unable to getAccessLogConfigExpressions request context")
+		h.log.Error("unable to get request context")
 		return
 	}
 
