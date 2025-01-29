@@ -810,11 +810,17 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 
 	var subgraphAccessLogger *requestlogger.SubgraphAccessLogger
 	if s.accessLogsConfig != nil && s.accessLogsConfig.Logger != nil {
+		exprAttributes, err := requestlogger.GetAccessLogConfigExpressions(s.accessLogsConfig.Attributes)
+		if err != nil {
+			return nil, fmt.Errorf("failed building router access log expressions: %w", err)
+		}
+
 		requestLoggerOpts := []requestlogger.Option{
 			requestlogger.WithDefaultOptions(),
 			requestlogger.WithNoTimeField(),
 			requestlogger.WithFields(baseLogFields...),
 			requestlogger.WithAttributes(s.accessLogsConfig.Attributes),
+			requestlogger.WithExprAttributes(exprAttributes),
 			requestlogger.WithFieldsHandler(AccessLogsFieldHandler),
 		}
 
@@ -834,6 +840,11 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 		httpRouter.Use(requestLogger)
 
 		if s.accessLogsConfig.SubgraphEnabled {
+			exprAttributes, err := requestlogger.GetAccessLogConfigExpressions(s.accessLogsConfig.SubgraphAttributes)
+			if err != nil {
+				return nil, fmt.Errorf("failed building subgraph access log expressions: %w", err)
+			}
+
 			subgraphAccessLogger = requestlogger.NewSubgraphAccessLogger(
 				s.accessLogsConfig.Logger,
 				requestlogger.SubgraphOptions{
@@ -841,6 +852,7 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 					FieldsHandler:         AccessLogsFieldHandler,
 					Fields:                baseLogFields,
 					Attributes:            s.accessLogsConfig.SubgraphAttributes,
+					ExprAttributes:        exprAttributes,
 				})
 		}
 	}
