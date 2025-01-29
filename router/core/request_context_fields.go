@@ -9,7 +9,6 @@ import (
 	"github.com/wundergraph/cosmo/router/pkg/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -35,8 +34,15 @@ const (
 
 // Helper functions to create zap fields for custom attributes.
 
-// TODO: Maybe refactor the struct so we can use a struct still keeping with the norms?
-func NewNonCustomAttributeAnyLogField(val any, key string, defaultValue any) zap.Field {
+func NewExpressionLogField(val any, key string, defaultValue any) zap.Field {
+	// Depending on the condition exprlang will dereference reportError sometimes
+	// and as the method receivers are all pointers (*reportError)
+	// the Error() function wont get called unless its of type *reportError
+	switch result := val.(type) {
+	case reportError:
+		val = &result
+	}
+
 	if v := val; v != "" {
 		return zap.Any(key, v)
 	} else if defaultValue != "" {
@@ -82,6 +88,7 @@ func NewDurationLogField(val time.Duration, attribute config.CustomAttribute) za
 }
 
 func AccessLogsFieldHandler(
+	logger *zap.Logger,
 	attributes []config.CustomAttribute,
 	exprAttributes []requestlogger.ExpressionAttribute,
 	passedErr any,
@@ -113,11 +120,10 @@ func AccessLogsFieldHandler(
 	for _, exprField := range exprAttributes {
 		result, err := expr.Run(exprField.Expr, reqContext.expressionContext)
 		if err != nil {
-			// TODO: Unsure log semantics in the codebase, some had log Printf for errors
-			log.Printf("unable to process expression for slog  %v", err)
+			logger.Error("unable to process expression for access logs", zap.String("fieldKey", exprField.Key), zap.Error(err))
 			continue
 		}
-		resFields = append(resFields, NewNonCustomAttributeAnyLogField(result, exprField.Key, exprField.Default))
+		resFields = append(resFields, NewExpressionLogField(result, exprField.Key, exprField.Default))
 	}
 
 	return resFields

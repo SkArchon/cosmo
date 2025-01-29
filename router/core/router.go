@@ -656,7 +656,6 @@ func (r *Router) initModules(ctx context.Context) error {
 					reqContext := getRequestContext(request.Context())
 					// Ensure we work with latest request in the chain to work with the right context
 					reqContext.request = request
-					reqContext.expressionContext.Request.Body = request.Body
 					fn.Middleware(reqContext, handler)
 				})
 			})

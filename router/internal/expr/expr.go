@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -42,8 +41,7 @@ type Request struct {
 	Auth   RequestAuth    `expr:"auth"`
 	URL    RequestURL     `expr:"url"`
 	Header RequestHeaders `expr:"header"`
-	Error  string         `expr:"error"`
-	Body   io.ReadCloser  `expr:"body"`
+	Error  error          `expr:"error"`
 }
 
 // RequestURL is the context for the URL object in expressions

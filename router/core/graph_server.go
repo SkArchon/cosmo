@@ -692,7 +692,6 @@ func (s *graphServer) buildGraphMux(ctx context.Context,
 				r:                   r,
 			})
 
-			reqContext.expressionContext.Request.Body = r.Body
 
 			r = r.WithContext(withRequestContext(r.Context(), reqContext))
 
