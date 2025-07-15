@@ -1507,10 +1507,36 @@ func (s *graphServer) setupConnector(ctx context.Context, config *nodev1.EngineC
 			return fmt.Errorf("failed to get plugin path: %w", err)
 		}
 
+		startupConfig := grpcconnector.GRPCStartupParams{}
+
+		if s.traceConfig.Enabled && len(s.traceConfig.Exporters) > 0 {
+			enabledExporters := make([]grpcconnector.GRPCExporter, 0)
+			for _, exporter := range s.traceConfig.Exporters {
+				if exporter != nil && !exporter.Disabled {
+					transformedExporter := grpcconnector.GRPCExporter{
+						Endpoint:      exporter.Endpoint,
+						Exporter:      string(exporter.Exporter),
+						BatchTimeout:  exporter.BatchTimeout,
+						ExportTimeout: exporter.ExportTimeout,
+						Headers:       exporter.Headers,
+						HTTPPath:      exporter.HTTPPath,
+					}
+					enabledExporters = append(enabledExporters, transformedExporter)
+				}
+			}
+
+			startupConfig.Telemetry = &grpcconnector.GRPCTelemetry{
+				Tracing: &grpcconnector.GRPCTracing{
+					Exporters: enabledExporters,
+				},
+			}
+		}
+
 		grpcPlugin, err := grpcconnector.NewGRPCPlugin(grpcconnector.GRPCPluginConfig{
-			Logger:     s.logger,
-			PluginName: pluginConfig.GetName(),
-			PluginPath: pluginPath,
+			Logger:        s.logger,
+			PluginName:    pluginConfig.GetName(),
+			PluginPath:    pluginPath,
+			StartupConfig: startupConfig,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create grpc plugin for subgraph %s: %w", dsConfig.Id, err)

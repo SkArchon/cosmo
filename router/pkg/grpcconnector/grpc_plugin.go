@@ -2,6 +2,7 @@ package grpcconnector
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -15,9 +16,10 @@ import (
 )
 
 type GRPCPluginConfig struct {
-	Logger     *zap.Logger
-	PluginPath string
-	PluginName string
+	Logger        *zap.Logger
+	PluginPath    string
+	PluginName    string
+	StartupConfig GRPCStartupParams
 }
 
 type GRPCPlugin struct {
@@ -34,6 +36,8 @@ type GRPCPlugin struct {
 	pluginName string
 
 	client *GRPCPluginClient
+
+	startupConfig GRPCStartupParams
 }
 
 func NewGRPCPlugin(config GRPCPluginConfig) (*GRPCPlugin, error) {
@@ -56,8 +60,9 @@ func NewGRPCPlugin(config GRPCPluginConfig) (*GRPCPlugin, error) {
 
 		logger: config.Logger,
 
-		pluginPath: config.PluginPath,
-		pluginName: config.PluginName,
+		pluginPath:    config.PluginPath,
+		pluginName:    config.PluginName,
+		startupConfig: config.StartupConfig,
 	}, nil
 }
 
@@ -92,11 +97,22 @@ func (p *GRPCPlugin) fork() error {
 
 	pluginCmd := newPluginCommand(filePath)
 
+	// This is the same as SkipHostEnv false
+	// except that we do that first so that any params are not overriden
+	pluginCmd.Env = append(pluginCmd.Env, os.Environ()...)
+
+	configJson, err := json.Marshal(p.startupConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create plugin startup config: %w", err)
+	}
+	pluginCmd.Env = append(pluginCmd.Env, fmt.Sprintf("%s=%s", "startup_config", configJson))
+
 	pluginClient := plugin.NewClient(&plugin.ClientConfig{
 		Cmd:              pluginCmd,
 		AllowedProtocols: []plugin.Protocol{plugin.ProtocolGRPC},
 		HandshakeConfig:  handshakeConfig,
 		Logger:           NewPluginLogger(p.logger),
+		SkipHostEnv:      true,
 		Plugins: map[string]plugin.Plugin{
 			p.pluginName: p,
 		},
