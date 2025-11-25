@@ -9,6 +9,7 @@ import CreatePluginCommand from './commands/create.js';
 import PublishPluginCommand from './commands/publish.js';
 import DeletePluginCommand from './commands/delete.js';
 
+
 export default (opts: BaseCommandOptions) => {
   const command = new Command('plugin');
   command.description('Provides commands for creating and maintaining router plugins');
