@@ -65,8 +65,6 @@ export default (opts: BaseCommandOptions) => {
       }
       if (!options.skipToolsInstallation) {
         await checkAndInstallTools(options.forceToolsInstallation, language);
-      }      if (!options.skipToolsInstallation) {
-        await checkAndInstallTools(options.forceToolsInstallation, language);
       }
       if (!options.skipToolsInstallation) {
         await checkAndInstallTools(options.forceToolsInstallation, language);
@@ -77,7 +75,9 @@ export default (opts: BaseCommandOptions) => {
       if (!options.skipToolsInstallation) {
         await checkAndInstallTools(options.forceToolsInstallation, language);
       }
-
+      if (!options.skipToolsInstallation) {
+        await checkAndInstallTools(options.forceToolsInstallation, language);
+      }
 
       // Start the main build process
       spinner.start('Building plugin...');
