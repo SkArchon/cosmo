@@ -54,6 +54,15 @@ export default (opts: BaseCommandOptions) => {
       });
       program.error('');
     }
+    renderResultTree(spinner, 'Plugin language detection failed!', false, pluginName, {
+      output: pluginDir,
+    });
+    renderResultTree(spinner, 'Plugin language detection failed!', false, pluginName, {
+      output: pluginDir,
+    });
+    renderResultTree(spinner, 'Plugin language detection failed!', false, pluginName, {
+      output: pluginDir,
+    });
 
     const protoOptions: ProtoOption[] = [];
     let platforms: string[] = [];
