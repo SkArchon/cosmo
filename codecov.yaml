@@ -4,4 +4,4 @@ coverage:
       default:   # default is the status check's name, not default settings
         target: 90
         threshold: 5
-        informational: true
+        informational: false
