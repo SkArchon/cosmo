@@ -25,7 +25,7 @@
     "build": "rm -rf dist && tsc",
     "build:bun": "bun build --compile --production --outfile wgc src/index.ts",
     "wgc": "tsx --env-file .env src/index.ts",
-    "test": "pnpm lint && vitest run test/ --coverage",
+    "test": "pnpm lint && vitest run test/",
     "coverage": "vitest run test/ --coverage",
     "lint": "eslint --cache --ext .ts,.mjs,.cjs . && prettier -c src",
     "lint:fix": "eslint --cache --fix --ext .ts,.mjs,.cjs . && prettier --write -c src",
