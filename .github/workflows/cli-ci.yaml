@@ -67,7 +67,9 @@ jobs:
         uses: ./.github/actions/codecov-upload-pr
         with:
           artifact-name: pr-build
-          coverage-path: cli/coverage
+          coverage-path: |
+            cli/coverage/clover.xml
+            cli/coverage/coverage-final.json
           retention-days: 7
           codecov-token: ${{ secrets.CODECOV_TOKEN }}
 
