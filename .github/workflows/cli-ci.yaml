@@ -128,4 +128,31 @@ jobs:
         if: ${{ contains(needs.*.result, 'failure') }}
         run: exit 1
 
-        
+  after-merge:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print merge commit SHA
+        run: |
+          echo "Merge commit SHA: ${{ github.event.pull_request.merge_commit_sha }}"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Download artifact from earlier job
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-build-${{ github.event.pull_request.number }}
+
+      - name: Use artifact
+        run: ls -R
+
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          override_commit: ${{ github.event.pull_request.merge_commit_sha }}
+          token: ${{ secrets.CODECOV_TOKEN }}
