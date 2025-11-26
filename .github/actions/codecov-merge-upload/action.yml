@@ -27,9 +27,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-
     - name: Find latest successful PR run for this commit
       id: find-run
       shell: bash

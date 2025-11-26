@@ -92,6 +92,10 @@ jobs:
       github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
       - name: Print merge commit SHA
         run: |
           echo "Merge commit SHA: ${{ github.event.pull_request.merge_commit_sha }}"
