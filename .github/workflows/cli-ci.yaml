@@ -1,7 +1,6 @@
 name: wgc CI
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
     paths:
       - 'pnpm-lock.yaml'
       - 'cli/**/*'
