@@ -115,7 +115,7 @@ jobs:
   build_test:
     runs-on: ubuntu-latest
     needs: [build_test_default, build_test_node_matrix, build_bun_matrix]
-    if: github.event.action != 'closed' && always()
+    if: always()
     steps:
       - name: 'All tests passed'
         if: ${{ !(contains(needs.*.result, 'failure')) }}
