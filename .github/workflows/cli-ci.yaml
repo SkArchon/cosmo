@@ -22,7 +22,6 @@ jobs:
   build_test_default:
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    if: github.event.action != 'closed'
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +70,6 @@ jobs:
   build_test_node_matrix:
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    if: github.event.action != 'closed'
 
     strategy:
       matrix:
@@ -101,7 +99,6 @@ jobs:
   build_bun_matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event.action != 'closed'
 
     strategy:
       matrix:
