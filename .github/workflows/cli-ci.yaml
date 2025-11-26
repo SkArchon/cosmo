@@ -1,7 +1,6 @@
 name: wgc CI
 on:
   pull_request:
-    types: [opened, reopened, synchronize, closed]
     paths:
       - 'pnpm-lock.yaml'
       - 'cli/**/*'
@@ -83,19 +82,18 @@ jobs:
         if: ${{ contains(needs.*.result, 'failure') }}
         run: exit 1
 
-  after-merge:
-    if: github.event.action == 'closed'
+  post-merge:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
       - name: Print merge commit SHA
         run: |
           echo "Merge commit SHA: ${{ github.event.pull_request.merge_commit_sha }}"
 
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
-
-      - name: Download and upload coverage to Codecov
+      - name: Download computed artifact and upload to codecov with merge SHA
         uses: ./.github/actions/codecov-merge-upload
         with:
           artifact-name: pr-build
