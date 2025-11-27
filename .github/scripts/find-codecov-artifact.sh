@@ -76,7 +76,7 @@ for run_id in $run_ids; do
   # Find all artifacts matching the pattern
   matching_artifacts=$(echo "$artifacts_json" | jq --arg pattern "$ARTIFACT_NAME_PATTERN" --arg run "$run_id" '
     .artifacts
-    | map(select(.name | contains($pattern) and .expired == false))
+    | map(select((.name | contains($pattern)) and .expired == false))
     | map({
         run_id: ($run | tonumber),
         artifact_id: .id,
@@ -90,10 +90,11 @@ for run_id in $run_ids; do
 done
 
 # Sort by created_at and ensure we have at least one artifact
-artifact_count=$(echo "$all_artifacts" | jq 'length')
+artifact_count=$(echo "$all_artifacts" | jq 'length' 2>/dev/null || echo "0")
 
-if [ "$artifact_count" -eq 0 ]; then
+if [ -z "$artifact_count" ] || [ "$artifact_count" -eq 0 ]; then
   echo "No non-expired artifacts matching pattern '$ARTIFACT_NAME_PATTERN' found" >&2
+  echo "All artifacts JSON: $all_artifacts" >&2
   exit 1
 fi
 
