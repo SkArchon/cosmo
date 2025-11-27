@@ -2,10 +2,6 @@ name: 'Codecov Download and Upload'
 description: 'Download coverage artifacts from previous PR runs and upload to Codecov'
 
 inputs:
-  artifact-name-pattern:
-    description: 'Pattern to match artifact names (e.g., "codecov-pr-build")'
-    required: false
-    default: 'codecov-pr-build'
   coverage-path:
     description: 'Path to coverage files'
     required: true
@@ -33,7 +29,7 @@ runs:
         REPO: ${{ github.repository }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         CURRENT_RUN_ID: ${{ github.run_id }}
-        ARTIFACT_NAME_PATTERN: ${{ inputs.artifact-name-pattern }}
+        ARTIFACT_NAME_PATTERN: codecov
         WORKFLOW_PATHS: ${{ inputs.workflow-paths }}
       run: ./.github/scripts/find-codecov-artifact.sh
 
